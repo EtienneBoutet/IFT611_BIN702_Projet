@@ -23,14 +23,17 @@ int * NWScoreRev(const char* beginX, const char* endX, const char* beginY, const
 ZW HirschBerg(const char* beginX, const char* endX, const char* beginY, const char* endY);
 ZW NeedlemanWunsch(const char* beginX, const char* endX, const char* beginY, const char* endY);
 
-int main() {
-	std::string s1 = "AATCG";
-	std::string s2 = "AACG";
+int main(int argc, char *argv[]) {
+	if (3 == argc){
+		std::string s1 = argv[1];
+		std::string s2 = argv[2];
 
-	ZW zw = HirschBerg(s1.c_str(), s1.c_str() + s1.length(), s2.c_str(), s2.c_str() + s2.length());
-	std::cout << "S: " << zw.Z << std::endl;
-	std::cout << "T: " << zw.W << std::endl;
-	return 0;
+		ZW zw = HirschBerg(s1.c_str(), s1.c_str() + s1.length(), s2.c_str(), s2.c_str() + s2.length());
+		std::cout << "S: " << zw.Z << std::endl;
+		std::cout << "T: " << zw.W << std::endl;
+		return 0;
+	}
+	return 1;
 }
 
 int Ins(const char& c) {
