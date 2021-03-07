@@ -1,7 +1,9 @@
 main:
-	g++ HirschBerg.cpp Source.cpp
-	./a.out AAAABB BB
+	[ ! -d "bin" ] && mkdir -p "bin"; \
+	g++ HirschBerg.cpp Source.cpp -o ./bin/main
+	./bin/main AAAABB BB
 
 test:
-	g++ HirschBerg.cpp Tests.cpp
-	./a.out
+	[ ! -d "bin" ] && mkdir -p "bin"; \
+	g++ HirschBerg.cpp Tests.cpp -o ./bin/tests
+	./bin/tests
