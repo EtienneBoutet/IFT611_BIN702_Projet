@@ -1,13 +1,85 @@
 #include "HirschBerg.h"
+
+namespace H{
+    class TypeScoreTable{};
+    class TypeLastLine{};
+
+    class HMemory{
+        int * mem;
+
+        //for score table
+        int * memscoreTable;
+
+
+        //for lastlines
+        bool dispolastlines[2]; 
+        int * memlastlines[2];
+    public:
+        HMemory(size_t size){
+            mem = new int[size*4];
+            memscoreTable = mem;
+            for(int i = 0; i < 2; i++){
+                memlastlines[i] = mem + (2 + i) * size;
+            }
+            dispolastlines[0] = dispolastlines[1] = true;
+        }
+
+        int * allouerScoreTable(){
+            return memscoreTable;
+        }
+
+        int * allouerLastline(){
+            for (int i = 0; i < 2; i++)
+            {
+                if (dispolastlines[i]){
+                    dispolastlines[i] = false;
+                    return memlastlines[i];
+                }
+            }
+            return nullptr; 
+        }
+
+        void releaseLastline(void * p){
+            for (int i = 0; i < 2; i++)
+            {
+                if (p == memlastlines[i]){
+                    dispolastlines[i] = true;
+                }
+            }
+        }
+
+        ~HMemory(){
+            delete [] mem;
+        }
+    };
+}
+
+void * operator new[](size_t n, H::HMemory &ges, H::TypeLastLine) {
+    return ges.allouerLastline();
+}
+
+void operator delete[](void *p, H::HMemory &ges, H::TypeLastLine) {
+    ges.releaseLastline(p);
+}
+
+void * operator new[](size_t n, H::HMemory &ges, H::TypeScoreTable) {
+    return ges.allouerScoreTable();
+}
+
+void operator delete[](void *p, H::HMemory &ges, H::TypeScoreTable) {
+}
+
 namespace H{
     int Ins(const char & c);
     int Del(const char & c);
     int Sub(const char & c1, const char& c2);
 
-    int * NWScore(const char* beginX, const char* endX, const char* beginY, const char* endY);
-    int * NWScoreRev(const char* beginX, const char* endX, const char* beginY, const char* endY);
+    int * NWScore(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem);
+    int * NWScoreRev(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem);
 
-    ZW NeedlemanWunsch(const char* beginX, const char* endX, const char* beginY, const char* endY);
+    ZW NeedlemanWunsch(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem);
+
+    ZW HirschBerg(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem);
 
     int Ins(const char& c) {
         return -1;
@@ -21,9 +93,9 @@ namespace H{
         return c1 == c2 ? 2 : -1;
     }
 
-    int * NWScore(const char* beginX, const char* endX, const char* beginY, const char* endY){
+    int * NWScore(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem){
         int scoresize = (endY - beginY) + 1;
-        int (*score)[2] = new int[scoresize][2];
+        int (*score)[2] = new(mem, TypeScoreTable{}) int[scoresize][2];
         score[0][0] = 0;
         
         for (int j = 1; j < scoresize; j++) {
@@ -43,18 +115,18 @@ namespace H{
             }
         }
 
-        int* lastLine = new int[scoresize];
+        int* lastLine = new(mem, TypeLastLine{}) int[scoresize];
         for (int j = 0; j < scoresize; j++) {
             lastLine[j] = score[j][1];
         }
 
-        delete [] score;
+        ::operator delete[](score, mem, TypeScoreTable{});
         return lastLine;
     }
 
-    int * NWScoreRev(const char* beginX, const char* endX, const char* beginY, const char* endY) {
+    int * NWScoreRev(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem) {
         int scoresize = (endY - beginY) + 1;
-        int(*score)[2] = new int[scoresize][2];
+        int(*score)[2] = new(mem, TypeScoreTable{}) int[scoresize][2];
         score[0][0] = 0;
 
         for (int j = 1; j < scoresize; j++) {
@@ -74,15 +146,21 @@ namespace H{
             }
         }
 
-        int* lastLine = new int[scoresize];
+        int* lastLine = new(mem, TypeLastLine{}) int[scoresize];
         for (int j = 0; j < scoresize; j++) {
             lastLine[j] = score[scoresize - 1 - j][1];
         }
-        delete [] score;
+        ::operator delete[](score, mem, TypeScoreTable{});
         return lastLine;
     }
 
+    
     ZW HirschBerg(const char* beginX, const char* endX, const char* beginY, const char* endY) {
+        HMemory mem(endX - beginX + endY - beginY);
+        return HirschBerg(beginX, endX, beginY, endY, mem);
+    }
+
+    ZW HirschBerg(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem) {
         ZW zw;
         if (!(endX - beginX)) {
             std::for_each(beginY, endY, [&zw](const char& c) {
@@ -97,15 +175,15 @@ namespace H{
                 });
         }
         else if ((endX - beginX) == 1 || (endY - beginY) == 1) {
-            zw = NeedlemanWunsch(beginX, endX, beginY, endY);
+            zw = NeedlemanWunsch(beginX, endX, beginY, endY, mem);
         }
         else {
             int xlen = endX - beginX;
             int xmid = xlen / 2;
             int ylen = endY - beginY;
 
-            int * ScoreL = NWScore(beginX, beginX + xmid, beginY, endY);
-            int * ScoreR = NWScoreRev(beginX + xmid, endX, beginY, endY);
+            int * ScoreL = NWScore(beginX, beginX + xmid, beginY, endY, mem);
+            int * ScoreR = NWScoreRev(beginX + xmid, endX, beginY, endY, mem);
 
             int ymid = 0;
             for (int i = 0; i < ylen + 1; i++) {
@@ -113,22 +191,22 @@ namespace H{
                 ymid = ScoreL[i] > ScoreL[ymid] ? i : ymid;
             }
 
-            delete[] ScoreL;
-            delete[] ScoreR;
+            ::operator delete[](ScoreL, mem, TypeLastLine{});
+            ::operator delete[](ScoreR, mem, TypeLastLine{});
 
 
-            zw = HirschBerg(beginX, beginX + xmid, beginY, beginY + ymid)
-                + HirschBerg(beginX + xmid, endX, beginY + ymid, endY);
+            zw = HirschBerg(beginX, beginX + xmid, beginY, beginY + ymid, mem)
+                + HirschBerg(beginX + xmid, endX, beginY + ymid, endY, mem);
         }
         return zw;
     }
 
-    ZW NeedlemanWunsch(const char* beginX, const char* endX, const char* beginY, const char* endY) {
+    ZW NeedlemanWunsch(const char* beginX, const char* endX, const char* beginY, const char* endY, HMemory& mem) {
         ZW zw;
         
         if (endX - beginX == 1) {
             int scoresize = (endY - beginY) + 1;
-            int(*score)[2] = new int[scoresize][2];
+            int(*score)[2] = new(mem, TypeScoreTable{}) int[scoresize][2];
             score[0][0] = 0;
 
             for (int j = 1; j < scoresize; j++) {
@@ -165,10 +243,10 @@ namespace H{
                 }
             }
 
-            delete[] score;
+            ::operator delete[](score, mem, TypeScoreTable{});
         }
         else {
-            ZW zwPrime = NeedlemanWunsch(beginY, endY, beginX, endX);
+            ZW zwPrime = NeedlemanWunsch(beginY, endY, beginX, endX, mem);
             zw.Z = zwPrime.W;
             zw.W = zwPrime.Z;
         }
