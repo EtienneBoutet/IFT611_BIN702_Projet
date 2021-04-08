@@ -15,18 +15,18 @@ void verifyTimeOnNChar(int n);
 std::vector<std::pair<
     std::string, std::string
 >> generateDnaStringPairs (int length, int how_many) {
+    
     std::string lts[4] = {"A", "B", "G", "T"};
     auto generateDnaString = [&lts](int length) {
         std::string str = "";
-        // TODO - Changer les boucles avec les --
-        for (;length > 0; length--) {
+        for (int i = 0; i < length; i++) {
             str.append(lts[rand() % 4]);
         }
         return str;
     };
 
     std::vector<std::pair<std::string, std::string>> res;
-    for (;how_many > 0; how_many--) {
+    for (int i = 0; i < how_many; i++) {
         res.push_back(
             { generateDnaString(length), generateDnaString(length) }
         );
@@ -35,40 +35,6 @@ std::vector<std::pair<
     return res;
 }
 
-void foo() {
-    std::vector<double> moyennes;
-    for (int i = 0; i < 200; i++) {
-
-        std::vector<int64_t> times;
-        for (auto pair : generateDnaStringPairs(i, 200)) {
-            H::ZW zw;
-            std::string s_1 = pair.first;
-            std::string s_2 = pair.second;
-
-            auto pre = high_resolution_clock::now();
-            zw = H::HirschBerg(s_1.c_str(), s_1.c_str() + s_1.length(),
-                            s_2.c_str(), s_2.c_str() + s_2.length());
-            auto post = high_resolution_clock::now();
-
-            times.push_back(
-                duration_cast<microseconds>(post-pre).count()
-            );
-        }
-
-        auto size = times.size();
-        double mean = std::accumulate(times.begin(), times.end(), 0.0) / size;
-
-        moyennes.push_back(mean);
-    }
-
-    std::cout << "moyenne = [";
-    for (double moyenne : moyennes) {
-        std::cout << moyenne << ", ";
-    }
-    std::cout << "]";
-}
-
-
 int main(){
     std::vector<std::vector<std::string>> tests = {
         {"AAAABB", "BB", "AAAABB", "----BB"},
@@ -76,7 +42,7 @@ int main(){
         {"AATCGAATG", "AACGCGTA", "AATCGAATG", "AA-CGCGTA"}
     };
 
-    // Tests pour vérifier que l'algo fonctionne
+    std::cout << "Unit tests : " << std::endl;
     int passed_tests = 0;
 
     for (auto test : tests) {
@@ -84,8 +50,8 @@ int main(){
     }
 
     std::cout << "Passed tests : " << passed_tests << "/" << tests.size() << std::endl;
-
-    // Tests pour le calcul de temps
+    std::cout << "-------------------" << std::endl;
+    std::cout << "Stress test : " << std::endl;
     std::vector<int64_t> times;
     
     for (auto pair : generateDnaStringPairs(50, 50'000)) {
@@ -132,49 +98,3 @@ int verify(std::string S, std::string T, std::string expected_S, std::string exp
 
     return 0;
 }
-
-
-
-// LEGACY -----
-
-void verifyTimeOnNChar(int n){
-    char cs[4] = {'A', 'B', 'G', 'T'};
-    size_t size = 4;
-    int * arr = new int[n * 2];
-
-    for(int i = 0; i < n * 2; i++){
-        arr[i] = 0;
-    }
-
-    while (true)
-    {
-        int i = 0;
-        std::string s = "";
-        for(int i = 0; i < n * 2; i++){
-            s += cs[arr[i]];
-        }
-        std::cout << s << std::endl;
-        auto pre = high_resolution_clock::now();
-        H::ZW zw = H::HirschBerg(s.c_str(), s.c_str() + n, s.c_str() + n, s.c_str() + n*2);
-        auto post = high_resolution_clock::now();
-        auto time = post - pre;
-        std::cout << "time : " << duration_cast<microseconds>(time).count() << std::endl;
-        std::cout << "received : " << zw.Z << std::endl;
-        std::cout << "received : " << zw.W << std::endl;
-        for (; i < n * 2;){
-            arr[i]++;
-            if (arr[i] == size){
-                arr[i] = 0;
-                i++;
-                
-            }
-            else{
-                break;
-            }
-        }
-        if (i == n * 2){
-            break;
-        }
-    }
-}
-
