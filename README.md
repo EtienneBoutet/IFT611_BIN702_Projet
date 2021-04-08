@@ -11,4 +11,4 @@ Deux manières pour exécuter le code :
 
 - `make main` (On peut modifier le makefile pour changer les arguments passées)
 
-- `make test`g
+- `make test`
