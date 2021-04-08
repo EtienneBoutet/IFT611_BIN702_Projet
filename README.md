@@ -7,8 +7,12 @@ Alex Sansfaçon Buchanan
 
 Compilation : g++ version 7.5.0.
 
-Deux manières pour exécuter le code :
+Deux manières pour générer le code :
 
-- `make main` (On peut modifier le makefile pour changer les arguments passés à l'algorithme)
+- `make main` (génère l'exécutable dans le dossier bin)
 
-- `make test`
+- `make test` (génère et exécute les tests)
+
+Pour utiliser l'exécutable simplement appeler l'exécutable `./HirschBerg` suivi des deux mots à comparer:
+
+- `./HirschBerg ACGT CGTA`
