@@ -16,7 +16,7 @@ std::vector<std::pair<
     std::string, std::string
 >> generateDnaStringPairs (int length, int how_many) {
     
-    std::string lts[4] = {"A", "B", "G", "T"};
+    std::string lts[4] = {"A", "C", "G", "T"};
     auto generateDnaString = [&lts](int length) {
         std::string str = "";
         for (int i = 0; i < length; i++) {
